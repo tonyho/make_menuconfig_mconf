@@ -1,0 +1,70 @@
+mainmenu "Test Configuration"
+
+menu "General Setup"
+
+config TEST_FEATURE
+	bool "Enable test feature"
+	default y
+	help
+	  This is a test feature for demonstrating mconf functionality.
+	  
+	  If you are unsure, say Y.
+
+config TEST_STRING
+	string "Test string value"
+	default "hello world"
+	help
+	  Enter a test string value.
+
+config TEST_INT
+	int "Test integer value"
+	range 1 100
+	default 42
+	help
+	  Enter a test integer value between 1 and 100.
+
+config TEST_HEX
+	hex "Test hexadecimal value"
+	default 0x1000
+	help
+	  Enter a test hexadecimal value.
+
+choice
+	prompt "Test choice"
+	default TEST_CHOICE_A
+	help
+	  This is a test choice menu.
+
+config TEST_CHOICE_A
+	bool "Choice A"
+	help
+	  Select choice A.
+
+config TEST_CHOICE_B
+	bool "Choice B"
+	help
+	  Select choice B.
+
+config TEST_CHOICE_C
+	bool "Choice C"
+	help
+	  Select choice C.
+
+endchoice
+
+endmenu
+
+menu "Advanced Options"
+
+config ADVANCED_FEATURE
+	bool "Enable advanced features"
+	help
+	  Enable advanced features for testing.
+
+config DEPENDENT_FEATURE
+	bool "Feature that depends on advanced"
+	depends on ADVANCED_FEATURE
+	help
+	  This feature is only available when advanced features are enabled.
+
+endmenu
