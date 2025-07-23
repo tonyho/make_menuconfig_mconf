@@ -3,11 +3,79 @@
  * Released under the terms of the GNU GPL v2.0.
  */
 
+#include "config.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+/* Windows doesn't have regex.h, provide working compatibility using simple pattern matching */
+typedef struct {
+    char *pattern;
+    int flags;
+} regex_t;
+
+typedef struct {
+    int rm_so;  /* start of match */
+    int rm_eo;  /* end of match */
+} regmatch_t;
+
+#define REG_EXTENDED 1
+#define REG_ICASE    2
+#define REG_NOSUB    4
+
+static int regcomp(regex_t *preg, const char *pattern, int cflags) {
+    preg->pattern = strdup(pattern);
+    preg->flags = cflags;
+    return 0;
+}
+
+static int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags) {
+    char *found;
+    (void)eflags;
+    
+    if (preg->flags & REG_ICASE) {
+        /* Case insensitive search - simplified */
+        found = strstr(string, preg->pattern);
+    } else {
+        found = strstr(string, preg->pattern);
+    }
+    
+    if (found && nmatch > 0) {
+        pmatch[0].rm_so = found - string;
+        pmatch[0].rm_eo = pmatch[0].rm_so + strlen(preg->pattern);
+        return 0;
+    }
+    return 1; /* No match */
+}
+
+static void regfree(regex_t *preg) {
+    if (preg->pattern) {
+        free(preg->pattern);
+        preg->pattern = NULL;
+    }
+}
+
+/* Windows doesn't have sys/utsname.h, provide minimal compatibility */
+struct utsname {
+    char sysname[65];
+    char nodename[65];
+    char release[65];
+    char version[65];
+    char machine[65];
+};
+
+static int uname(struct utsname *buf) {
+    strcpy(buf->sysname, "Windows");
+    strcpy(buf->nodename, "localhost");
+    strcpy(buf->release, "10.0");
+    strcpy(buf->version, "Windows");
+    strcpy(buf->machine, "x86_64");
+    return 0;
+}
+#else
 #include <regex.h>
 #include <sys/utsname.h>
+#endif
 
 #include "lkc.h"
 

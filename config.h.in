@@ -1,0 +1,21 @@
+/* Configuration header for mconf */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+/* Define the curses header to include */
+#cmakedefine CURSES_LOC @CURSES_LOC@
+
+/* Package name */
+#define PACKAGE "@PACKAGE_NAME@"
+
+/* Locale directory */
+#define LOCALEDIR "@LOCALEDIR@"
+
+/* Disable NLS if requested */
+#cmakedefine KBUILD_NO_NLS
+
+/* Windows specific */
+#cmakedefine _WIN32
+
+#endif /* CONFIG_H */

@@ -6,6 +6,7 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include "config.h"
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
