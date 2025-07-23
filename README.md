@@ -77,7 +77,17 @@ sudo yum install ncurses-devel  # or dnf install ncurses-devel
 sudo pacman -S ncurses
 ```
 
-#### Windows (Cross-compilation)
+#### Windows (MSYS2 - Recommended)
+```bash
+# Install MSYS2 from https://www.msys2.org/
+# Then in MSYS2 MinGW64 shell:
+pacman -S mingw-w64-x86_64-gcc
+pacman -S mingw-w64-x86_64-cmake
+pacman -S mingw-w64-x86_64-ninja
+pacman -S mingw-w64-x86_64-ncurses
+```
+
+#### Windows (Cross-compilation from Linux)
 ```bash
 # Ubuntu/Debian
 sudo apt-get install mingw-w64 libpdcurses-mingw-w64-dev
@@ -99,6 +109,20 @@ cd mconf_standalone
 ```bash
 cd mconf_standalone
 ./build-linux-static.sh   # Creates ~1.4MB fully portable binary
+```
+
+**Windows (MSYS2 - Native Build):**
+```bash
+# In MSYS2 MinGW64 shell:
+cd mconf_standalone
+./build-windows-msys2.sh   # Creates mconf.exe with all dependencies
+```
+
+**Windows (PowerShell with MSYS2):**
+```powershell
+# In PowerShell (with MSYS2 installed):
+cd mconf_standalone
+.\build-windows-msys2.ps1  # Automated build using MSYS2
 ```
 
 **Windows (cross-compile from Linux):**

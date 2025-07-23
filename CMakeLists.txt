@@ -13,6 +13,26 @@ option(DISABLE_NLS "Disable Native Language Support" OFF)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
 
+# Add compiler flags to suppress warnings from generated code and kernel code
+# These warnings are common in Linux kernel code and generated files
+add_compile_options(
+    -Wno-pointer-to-int-cast
+    -Wno-int-to-pointer-cast
+    -Wno-missing-field-initializers
+    -Wno-unused-parameter
+    -Wno-sign-compare
+    -Wno-builtin-declaration-mismatch
+    -Wno-implicit-fallthrough
+)
+
+# Add Windows-specific settings
+if(WIN32)
+    # Define _WIN32 for Windows-specific code paths (mkdir, etc.)
+    add_definitions(-D_WIN32)
+    # Additional Windows-specific warning suppressions
+    add_compile_options(-Wno-format)
+endif()
+
 # Static linking
 if(BUILD_STATIC)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
@@ -21,20 +41,21 @@ if(BUILD_STATIC)
     endif()
 endif()
 
+# Add custom cmake modules path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # Find ncurses/curses library
 if(WIN32)
-    # Try to find PDCurses first, then ncurses
-    find_library(CURSES_LIBRARY NAMES pdcurses ncurses curses)
-    if(CURSES_LIBRARY)
-        if(CURSES_LIBRARY MATCHES "pdcurses")
-            set(CURSES_LOC "<curses.h>")
-        else()
-            set(CURSES_LOC "<ncurses.h>")
-        endif()
+    # Use custom FindNCurses module for better Windows/MSYS2 support
+    find_package(NCurses REQUIRED)
+    
+    if(NCURSES_FOUND)
+        set(CURSES_LIBRARY ${NCURSES_LIBRARIES})
+        set(CURSES_LOC ${NCURSES_CURSES_LOC})
+        include_directories(${NCURSES_INCLUDE_DIRS})
     else()
-        message(FATAL_ERROR "Neither PDCurses nor ncurses found. Please install one of them.")
+        message(FATAL_ERROR "ncurses not found. Please install ncurses development package.")
     endif()
-    set(_WIN32 ON)
 else()
     find_package(Curses REQUIRED)
     if(BUILD_STATIC)

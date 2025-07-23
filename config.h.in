@@ -6,8 +6,10 @@
 /* Define the curses header to include */
 #cmakedefine CURSES_LOC @CURSES_LOC@
 
-/* Package name */
+/* Package name - only define if not already defined */
+#ifndef PACKAGE
 #define PACKAGE "@PACKAGE_NAME@"
+#endif
 
 /* Locale directory */
 #define LOCALEDIR "@LOCALEDIR@"
@@ -15,7 +17,9 @@
 /* Disable NLS if requested */
 #cmakedefine KBUILD_NO_NLS
 
-/* Windows specific */
-#cmakedefine _WIN32
+/* Windows specific - don't redefine _WIN32 as it's built-in */
+#ifdef _WIN32
+#define WINDOWS_BUILD 1
+#endif
 
 #endif /* CONFIG_H */
