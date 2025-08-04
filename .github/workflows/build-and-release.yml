@@ -3,9 +3,9 @@ name: Build and Release mconf
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -14,153 +14,167 @@ jobs:
     strategy:
       matrix:
         arch: [x64]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install dependencies (x64)
-      if: matrix.arch == 'x64'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake ninja-build libncurses5-dev libncursesw5-dev
-    
+      - uses: actions/checkout@v4
 
-    
-    - name: Configure CMake (x64)
-      if: matrix.arch == 'x64'
-      run: |
-        mkdir build
-        cd build
-        cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON
-    
+      - name: Install dependencies (x64)
+        if: matrix.arch == 'x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build libncurses5-dev libncursesw5-dev
 
-    
-    - name: Build
-      run: |
-        cd build
-        ninja
-    
-    - name: Package Linux binary
-      run: |
-        mkdir -p dist/linux-${{ matrix.arch }}
-        cp build/mconf dist/linux-${{ matrix.arch }}/
-        chmod +x dist/linux-${{ matrix.arch }}/mconf
-        cd dist
-        tar -czf mconf-linux-${{ matrix.arch }}.tar.gz linux-${{ matrix.arch }}/
-    
-    - name: Upload Linux artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: mconf-linux-${{ matrix.arch }}
-        path: dist/mconf-linux-${{ matrix.arch }}.tar.gz
+      - name: Configure CMake (x64)
+        if: matrix.arch == 'x64'
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON
+
+      - name: Build
+        run: |
+          cd build
+          ninja
+
+      - name: Package Linux binary
+        run: |
+          mkdir -p dist/linux-${{ matrix.arch }}
+          cp build/mconf dist/linux-${{ matrix.arch }}/
+          chmod +x dist/linux-${{ matrix.arch }}/mconf
+          cd dist
+          tar -czf mconf-linux-${{ matrix.arch }}.tar.gz linux-${{ matrix.arch }}/
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mconf-linux-${{ matrix.arch }}
+          path: dist/mconf-linux-${{ matrix.arch }}.tar.gz
 
   build-windows:
     runs-on: windows-latest
     strategy:
       matrix:
         arch: [x64]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup MSYS2 (x64)
-      if: matrix.arch == 'x64'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: >-
-          mingw-w64-x86_64-gcc
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-ninja
-          mingw-w64-x86_64-ncurses
-          mingw-w64-x86_64-pkg-config
-    
+      - uses: actions/checkout@v4
 
-    
-    - name: Build with CMake and Ninja
-      shell: msys2 {0}
-      run: |
-        mkdir build
-        cd build
-        cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=OFF
-        ninja
-    
-    - name: Collect dependencies (x64)
-      if: matrix.arch == 'x64'
-      shell: msys2 {0}
-      run: |
-        mkdir -p dist/windows-${{ matrix.arch }}
-        cp build/mconf.exe dist/windows-${{ matrix.arch }}/
-        
-        # Copy required DLLs
-        cp /mingw64/bin/libncursesw6.dll dist/windows-${{ matrix.arch }}/
-        cp /mingw64/bin/libwinpthread-1.dll dist/windows-${{ matrix.arch }}/
-        cp /mingw64/bin/libgcc_s_seh-1.dll dist/windows-${{ matrix.arch }}/
-        
-        # Check for additional dependencies
-        ldd build/mconf.exe | grep mingw64 | awk '{print $3}' | while read dll; do
-          if [ -f "$dll" ]; then
-            cp "$dll" dist/windows-${{ matrix.arch }}/
-          fi
-        done
-    
+      - name: Setup MSYS2 (x64)
+        if: matrix.arch == 'x64'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-ncurses
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-libwinpthread-git
 
-    
-    - name: Package Windows binary
-      shell: msys2 {0}
-      run: |
-        cd dist
-        zip -r mconf-windows-${{ matrix.arch }}.zip windows-${{ matrix.arch }}/
-    
-    - name: Upload Windows artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: mconf-windows-${{ matrix.arch }}
-        path: dist/mconf-windows-${{ matrix.arch }}.zip
+      - name: Build with CMake and Ninja
+        shell: msys2 {0}
+        run: |
+          mkdir build
+          cd build
+          # List available ncurses libraries for debugging
+          echo "Available ncurses libraries:"
+          ls -la /mingw64/lib/libncurses*
+          ls -la /mingw64/lib/libcurses* || true
+          ls -la /mingw64/lib/libpdcurses* || true
+
+          # Check what pkg-config reports for ncurses
+          pkg-config --exists ncursesw && echo "ncursesw found via pkg-config"
+          pkg-config --exists ncurses && echo "ncurses found via pkg-config"
+          pkg-config --libs ncursesw || pkg-config --libs ncurses || echo "No pkg-config info"
+
+          # Temporarily rename the custom FindNCurses module to force use of standard CMake
+          mv ../cmake/FindNCurses.cmake ../cmake/FindNCurses.cmake.bak || true
+
+          # Configure using standard CMake Curses module with explicit paths
+          cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=OFF \
+            -DCMAKE_PREFIX_PATH="/mingw64" \
+            -DCURSES_LIBRARY="/mingw64/lib/libncursesw.dll.a" \
+            -DCURSES_INCLUDE_PATH="/mingw64/include" \
+            -DCURSES_HAVE_CURSES_H=1 \
+            -DCURSES_CURSES_H_PATH="/mingw64/include/ncurses.h" \
+            -DCURSES_CURSES_LIBRARY="/mingw64/lib/libncursesw.dll.a"
+          ninja
+
+      - name: Collect dependencies (x64)
+        if: matrix.arch == 'x64'
+        shell: msys2 {0}
+        run: |
+          mkdir -p dist/windows-${{ matrix.arch }}
+          cp build/mconf.exe dist/windows-${{ matrix.arch }}/
+
+          # Copy required DLLs
+          cp /mingw64/bin/libncursesw6.dll dist/windows-${{ matrix.arch }}/
+          cp /mingw64/bin/libwinpthread-1.dll dist/windows-${{ matrix.arch }}/
+          cp /mingw64/bin/libgcc_s_seh-1.dll dist/windows-${{ matrix.arch }}/
+
+          # Check for additional dependencies
+          ldd build/mconf.exe | grep mingw64 | awk '{print $3}' | while read dll; do
+            if [ -f "$dll" ]; then
+              cp "$dll" dist/windows-${{ matrix.arch }}/
+            fi
+          done
+
+      - name: Package Windows binary
+        shell: msys2 {0}
+        run: |
+          cd dist
+          zip -r mconf-windows-${{ matrix.arch }}.zip windows-${{ matrix.arch }}/
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mconf-windows-${{ matrix.arch }}
+          path: dist/mconf-windows-${{ matrix.arch }}.zip
 
   release:
     needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-    
-    - name: Prepare release assets
-      run: |
-        mkdir -p release
-        find artifacts -name "*.tar.gz" -exec cp {} release/ \;
-        find artifacts -name "*.zip" -exec cp {} release/ \;
-        ls -la release/
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: release/*
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-        body: |
-          ## mconf Standalone Build
-          
-          This release contains pre-built binaries of mconf for multiple platforms:
-          
-          ### Linux
-          - `mconf-linux-x64.tar.gz` - Linux x86_64 (statically linked)
-          
-          ### Windows
-          - `mconf-windows-x64.zip` - Windows x86_64 with all required DLLs
-          
-          ### Usage
-          Extract the appropriate archive for your platform and run the `mconf` executable.
-          
-          For Windows, all required DLLs are included in the package.
-          For Linux, the binaries are statically linked and should work on most distributions.
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -name "*.tar.gz" -exec cp {} release/ \;
+          find artifacts -name "*.zip" -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## mconf Standalone Build
+
+            This release contains pre-built binaries of mconf for multiple platforms:
+
+            ### Linux
+            - `mconf-linux-x64.tar.gz` - Linux x86_64 (statically linked)
+
+            ### Windows
+            - `mconf-windows-x64.zip` - Windows x86_64 with all required DLLs
+
+            ### Usage
+            Extract the appropriate archive for your platform and run the `mconf` executable.
+
+            For Windows, all required DLLs are included in the package.
+            For Linux, the binaries are statically linked and should work on most distributions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
