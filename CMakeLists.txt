@@ -29,15 +29,36 @@ add_compile_options(
 if(WIN32)
     # Define _WIN32 for Windows-specific code paths (mkdir, etc.)
     add_definitions(-D_WIN32)
+    # Force disable NLS on Windows to avoid libintl dependency
+    set(KBUILD_NO_NLS ON)
+    set(DISABLE_NLS ON)
+    # Define KBUILD_NO_NLS at compile time
+    add_definitions(-DKBUILD_NO_NLS)
+    # Define libintl function replacements to avoid linking issues
+    add_definitions(
+        -Dlibintl_fprintf=fprintf
+        -Dlibintl_printf=printf
+        -Dlibintl_sprintf=sprintf
+        -Dlibintl_snprintf=snprintf
+        -Dlibintl_vprintf=vprintf
+        -Dlibintl_vfprintf=vfprintf
+        -Dlibintl_vsnprintf=vsnprintf
+        -Dlibintl_gettext=gettext
+        -D__printf__=printf
+    )
     # Additional Windows-specific warning suppressions
     add_compile_options(-Wno-format)
 endif()
 
 # Static linking
 if(BUILD_STATIC)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
     if(WIN32)
+        # On Windows/MSYS2, ncurses is only available as DLL, so we can't do full static linking
+        # We'll link statically what we can (libgcc, etc.) but ncurses will be dynamic
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc")
+        message(WARNING "Full static linking not possible on Windows - ncurses will be dynamically linked")
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
     endif()
 endif()
 
@@ -121,6 +142,13 @@ add_executable(mconf ${MCONF_SOURCES} ${LXDIALOG_SOURCES})
 
 # Link libraries
 target_link_libraries(mconf ${CURSES_LIBRARY})
+
+# Windows-specific additional libraries
+if(WIN32)
+    # For Windows, we don't link libintl since we disable NLS
+    # Add Windows system libraries that might be needed
+    target_link_libraries(mconf -lws2_32)
+endif()
 
 # Additional libraries are already handled in the CURSES_LIBRARY setup above
 

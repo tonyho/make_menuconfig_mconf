@@ -14,8 +14,10 @@
 /* Locale directory */
 #define LOCALEDIR "@LOCALEDIR@"
 
-/* Disable NLS if requested */
+/* Disable NLS if requested - only define if not already defined */
+#ifndef KBUILD_NO_NLS
 #cmakedefine KBUILD_NO_NLS
+#endif
 
 /* Windows specific - don't redefine _WIN32 as it's built-in */
 #ifdef _WIN32
