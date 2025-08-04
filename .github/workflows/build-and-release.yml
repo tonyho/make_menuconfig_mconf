@@ -90,16 +90,17 @@ jobs:
           pkg-config --libs ncursesw || pkg-config --libs ncurses || echo "No pkg-config info"
 
           # Temporarily rename the custom FindNCurses module to force use of standard CMake
-          mv ../cmake/FindNCurses.cmake ../cmake/FindNCurses.cmake.bak || true
+          #mv ../cmake/FindNCurses.cmake ../cmake/FindNCurses.cmake.bak || true
 
           # Configure using standard CMake Curses module with explicit paths
-          cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=OFF \
-            -DCMAKE_PREFIX_PATH="/mingw64" \
-            -DCURSES_LIBRARY="/mingw64/lib/libncursesw.dll.a" \
-            -DCURSES_INCLUDE_PATH="/mingw64/include" \
-            -DCURSES_HAVE_CURSES_H=1 \
-            -DCURSES_CURSES_H_PATH="/mingw64/include/ncurses.h" \
-            -DCURSES_CURSES_LIBRARY="/mingw64/lib/libncursesw.dll.a"
+          #cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=OFF \
+          #  -DCMAKE_PREFIX_PATH="/mingw64" \
+          #  -DCURSES_LIBRARY="/mingw64/lib/libncursesw.dll.a" \
+          #  -DCURSES_INCLUDE_PATH="/mingw64/include" \
+          #  -DCURSES_HAVE_CURSES_H=1 \
+          #  -DCURSES_CURSES_H_PATH="/mingw64/include/ncurses.h" \
+          #  -DCURSES_CURSES_LIBRARY="/mingw64/lib/libncursesw.dll.a"
+          cmake .. -G Ninja
           ninja
 
       - name: Collect dependencies (x64)
