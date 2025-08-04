@@ -6,16 +6,31 @@
 #  NCURSES_CURSES_LOC - The header to include (e.g., <ncurses.h> or <ncurses/ncurses.h>)
 
 # Find the library first
-find_library(NCURSES_LIBRARIES
-    NAMES ncurses pdcurses curses
-    PATHS
-        ${CMAKE_PREFIX_PATH}/lib
-        $ENV{MSYSTEM_PREFIX}/lib
-        /mingw64/lib
-        /mingw32/lib
-        /usr/lib
-        /usr/local/lib
-)
+# For MSYS2, ncurses is available as DLL import libraries
+if(WIN32)
+    # On Windows/MSYS2, prefer ncursesw (wide character version)
+    find_library(NCURSES_LIBRARIES
+        NAMES ncursesw ncurses pdcurses curses
+        PATHS
+            ${CMAKE_PREFIX_PATH}/lib
+            $ENV{MSYSTEM_PREFIX}/lib
+            /mingw64/lib
+            /mingw32/lib
+            /usr/lib
+            /usr/local/lib
+    )
+else()
+    find_library(NCURSES_LIBRARIES
+        NAMES ncurses pdcurses curses
+        PATHS
+            ${CMAKE_PREFIX_PATH}/lib
+            $ENV{MSYSTEM_PREFIX}/lib
+            /mingw64/lib
+            /mingw32/lib
+            /usr/lib
+            /usr/local/lib
+    )
+endif()
 
 # Find the header
 find_path(NCURSES_INCLUDE_DIRS
