@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [x64, arm64]
+        arch: [x64]
     
     steps:
     - uses: actions/checkout@v4
@@ -24,16 +24,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake ninja-build libncurses5-dev libncursesw5-dev
     
-    - name: Install dependencies (arm64)
-      if: matrix.arch == 'arm64'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-        sudo apt-get install -y libncurses5-dev:arm64 libncursesw5-dev:arm64
-        # Install cross-compilation toolchain
-        sudo dpkg --add-architecture arm64
-        sudo apt-get update
-        sudo apt-get install -y libncurses5-dev:arm64 libncursesw5-dev:arm64
+
     
     - name: Configure CMake (x64)
       if: matrix.arch == 'x64'
@@ -42,18 +33,7 @@ jobs:
         cd build
         cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON
     
-    - name: Configure CMake (arm64)
-      if: matrix.arch == 'arm64'
-      run: |
-        mkdir build
-        cd build
-        cmake .. -G Ninja \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_STATIC=ON \
-          -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-          -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
-          -DCMAKE_SYSTEM_NAME=Linux \
-          -DCMAKE_SYSTEM_PROCESSOR=aarch64
+
     
     - name: Build
       run: |
@@ -78,7 +58,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        arch: [x64, arm64]
+        arch: [x64]
     
     steps:
     - uses: actions/checkout@v4
@@ -96,18 +76,7 @@ jobs:
           mingw-w64-x86_64-ncurses
           mingw-w64-x86_64-pkg-config
     
-    - name: Setup MSYS2 (arm64)
-      if: matrix.arch == 'arm64'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: CLANGARM64
-        update: true
-        install: >-
-          mingw-w64-clang-aarch64-gcc
-          mingw-w64-clang-aarch64-cmake
-          mingw-w64-clang-aarch64-ninja
-          mingw-w64-clang-aarch64-ncurses
-          mingw-w64-clang-aarch64-pkg-config
+
     
     - name: Build with CMake and Ninja
       shell: msys2 {0}
@@ -136,23 +105,7 @@ jobs:
           fi
         done
     
-    - name: Collect dependencies (arm64)
-      if: matrix.arch == 'arm64'
-      shell: msys2 {0}
-      run: |
-        mkdir -p dist/windows-${{ matrix.arch }}
-        cp build/mconf.exe dist/windows-${{ matrix.arch }}/
-        
-        # Copy required DLLs for ARM64
-        cp /clangarm64/bin/libncursesw6.dll dist/windows-${{ matrix.arch }}/
-        cp /clangarm64/bin/libwinpthread-1.dll dist/windows-${{ matrix.arch }}/
-        
-        # Check for additional dependencies
-        ldd build/mconf.exe | grep clangarm64 | awk '{print $3}' | while read dll; do
-          if [ -f "$dll" ]; then
-            cp "$dll" dist/windows-${{ matrix.arch }}/
-          fi
-        done
+
     
     - name: Package Windows binary
       shell: msys2 {0}
@@ -200,11 +153,9 @@ jobs:
           
           ### Linux
           - `mconf-linux-x64.tar.gz` - Linux x86_64 (statically linked)
-          - `mconf-linux-arm64.tar.gz` - Linux ARM64 (statically linked)
           
           ### Windows
           - `mconf-windows-x64.zip` - Windows x86_64 with all required DLLs
-          - `mconf-windows-arm64.zip` - Windows ARM64 with all required DLLs
           
           ### Usage
           Extract the appropriate archive for your platform and run the `mconf` executable.
