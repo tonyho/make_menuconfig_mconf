@@ -1029,11 +1029,12 @@ int main(int ac, char **av)
 			printf("  -v, --version  Display version information\n");
 			printf("  -s             Silent mode\n");
 			printf("\n");
-			printf("Author: 373466062@qq.com, mostly based on Linux kernel mconf\n");
+			printf("Modified by TonyHo 373466062@qq.com, based on Linux kernel mconf\n");
+			printf("https://github.com/tonyho/make_menuconfig_mconf\n");
 			printf("\n");
 			return 0;
 		} else if (strcmp(av[i], "-v") == 0 || strcmp(av[i], "--version") == 0) {
-			printf("%s version %s\n", PACKAGE, PACKAGE_VERSION);
+			printf("%s\n", PACKAGE_VERSION);
 			return 0;
 		}
 	}
