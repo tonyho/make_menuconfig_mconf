@@ -1009,6 +1009,7 @@ int main(int ac, char **av)
 {
 	char *mode;
 	int res;
+	int i;
 
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
@@ -1016,11 +1017,34 @@ int main(int ac, char **av)
 
 	signal(SIGINT, sig_handler);
 
+	/* Handle help and version options - check all arguments */
+	for (i = 1; i < ac; i++) {
+		if (strcmp(av[i], "-h") == 0 || strcmp(av[i], "--help") == 0) {
+			printf("Usage: %s [Kconfig file]\n", av[0]);
+			printf("\n");
+			printf("A standalone menuconfig tool for configuring Kconfig files.\n");
+			printf("\n");
+			printf("Options:\n");
+			printf("  -h, --help     Display this help message\n");
+			printf("  -v, --version  Display version information\n");
+			printf("  -s             Silent mode\n");
+			printf("\n");
+			printf("Author: 373466062@qq.com, mostly based on Linux kernel mconf\n");
+			printf("\n");
+			return 0;
+		} else if (strcmp(av[i], "-v") == 0 || strcmp(av[i], "--version") == 0) {
+			printf("%s version %s\n", PACKAGE, PACKAGE_VERSION);
+			return 0;
+		}
+	}
+
+	/* Handle silent mode */
 	if (ac > 1 && strcmp(av[1], "-s") == 0) {
 		silent = 1;
 		/* Silence conf_read() until the real callback is set up */
 		conf_set_message_callback(NULL);
 		av++;
+		ac--;
 	}
 	conf_parse(av[1]);
 	conf_read(NULL);

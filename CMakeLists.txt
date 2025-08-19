@@ -106,6 +106,7 @@ endif()
 # Configuration variables
 set(PACKAGE_NAME "mconf")
 set(LOCALEDIR "/usr/share/locale")
+set(PACKAGE_VERSION "1.0.0")
 
 if(DISABLE_NLS OR WIN32)
     set(KBUILD_NO_NLS ON)

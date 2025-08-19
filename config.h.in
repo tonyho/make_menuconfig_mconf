@@ -11,6 +11,9 @@
 #define PACKAGE "@PACKAGE_NAME@"
 #endif
 
+/* Package version */
+#define PACKAGE_VERSION "@PACKAGE_VERSION@"
+
 /* Locale directory */
 #define LOCALEDIR "@LOCALEDIR@"
 
