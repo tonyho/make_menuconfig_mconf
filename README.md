@@ -1,4 +1,8 @@
-# Standalone mconf (menuconfig) Builder
+# Git it for Windows/Linux
+
+Just download it from the release page, the Linux version is static linked, so no libncurse is required.
+
+## Standalone mconf (menuconfig) Builder
 
 This directory contains extracted source files from the Linux kernel's kconfig system to build a standalone `mconf` (menuconfig) program.
 
@@ -12,7 +16,6 @@ mconf is the program behind `make menuconfig` - it provides a text-based menu in
 
 ### Recent Fixes (Latest Update)
 
-1. **Segmentation Fault Fixed**: Resolved PACKAGE macro definition issue that was causing crashes during initialization
 2. **Build System Improved**: Enhanced build scripts with better dependency checking and error handling
 3. **Static Linking Working**: Successfully implemented static linking for completely portable binaries
 4. **Cross-platform Support**: Verified working on Linux with plans for Windows support
@@ -63,209 +66,7 @@ mconf_standalone/
 
 ## Building
 
-### Prerequisites
-
-#### Linux
-```bash
-# Ubuntu/Debian
-sudo apt-get install libncurses5-dev libncursesw5-dev
-
-# CentOS/RHEL/Fedora
-sudo yum install ncurses-devel  # or dnf install ncurses-devel
-
-# Arch Linux
-sudo pacman -S ncurses
-```
-
-#### Windows (MSYS2 - Recommended)
-```bash
-# Install MSYS2 from https://www.msys2.org/
-# Then in MSYS2 MinGW64 shell:
-pacman -S mingw-w64-x86_64-gcc
-pacman -S mingw-w64-x86_64-cmake
-pacman -S mingw-w64-x86_64-ninja
-pacman -S mingw-w64-x86_64-ncurses
-```
-
-#### Windows (Cross-compilation from Linux)
-```bash
-# Ubuntu/Debian
-sudo apt-get install mingw-w64 libpdcurses-mingw-w64-dev
-
-# Or build PDCurses manually for MinGW
-```
-
-### Build Methods
-
-#### Method 1: Shell Scripts (Recommended)
-
-**Linux (Dynamic Linking):**
-```bash
-cd mconf_standalone
-./build-linux.sh          # Creates ~175KB binary with library dependencies
-```
-
-**Linux (Static Linking):**
-```bash
-cd mconf_standalone
-./build-linux-static.sh   # Creates ~1.4MB fully portable binary
-```
-
-**Windows (MSYS2 - Native Build):**
-```bash
-# In MSYS2 MinGW64 shell:
-cd mconf_standalone
-./build-windows-msys2.sh   # Creates mconf.exe with all dependencies
-```
-
-**Windows (PowerShell with MSYS2):**
-```powershell
-# In PowerShell (with MSYS2 installed):
-cd mconf_standalone
-.\build-windows-msys2.ps1  # Automated build using MSYS2
-```
-
-**Windows (cross-compile from Linux):**
-```bash
-cd mconf_standalone
-./build-windows.sh
-```
-
-#### Method 2: CMake (Cross-platform)
-```bash
-cd mconf_standalone
-mkdir build && cd build
-
-# Standard build
-cmake ..
-make
-
-# Static build (default)
-cmake -DBUILD_STATIC=ON ..
-make
-
-# Disable NLS (Native Language Support)
-cmake -DDISABLE_NLS=ON ..
-make
-
-# Windows cross-compile
-cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-w64.cmake ..
-make
-```
-
-#### Method 3: Manual Compilation
-```bash
-cd mconf_standalone
-
-# Linux
-gcc -Wall -O2 -DCURSES_LOC='<ncurses.h>' -DPACKAGE='"mconf"' \
-    -Iinclude -Ilxdialog \
-    src/*.c lxdialog/*.c \
-    -lncurses -ltinfo -static -o mconf
-
-# Windows (with MinGW)
-x86_64-w64-mingw32-gcc -Wall -O2 -DCURSES_LOC='<curses.h>' \
-    -DPACKAGE='"mconf"' -DKBUILD_NO_NLS \
-    -Iinclude -Ilxdialog \
-    src/*.c lxdialog/*.c \
-    -lpdcurses -static -static-libgcc -o mconf.exe
-```
-
-## Usage
-
-### Basic Usage
-```bash
-# Use with provided test file
-./mconf test_Kconfig
-
-# Use with your own Kconfig file
-./mconf /path/to/your/Kconfig
-
-# If no file specified, looks for "Kconfig" in current directory
-./mconf
-```
-
-### Environment Variables
-```bash
-# Single menu mode (all options in one large tree)
-MENUCONFIG_MODE=single_menu ./mconf test_Kconfig
-
-# Color themes
-MENUCONFIG_COLOR=mono ./mconf test_Kconfig        # Monochrome
-MENUCONFIG_COLOR=blackbg ./mconf test_Kconfig     # Black background
-MENUCONFIG_COLOR=classic ./mconf test_Kconfig     # Classic blue
-MENUCONFIG_COLOR=bluetitle ./mconf test_Kconfig   # Blue title (default)
-```
-
-### Keyboard Shortcuts
-- **Arrow keys**: Navigate menus
-- **Enter**: Select/enter submenu
-- **Space**: Toggle boolean options or cycle through tristate
-- **Y**: Set to yes/built-in
-- **N**: Set to no/disabled  
-- **M**: Set to module (if applicable)
-- **?** or **H**: Show help
-- **/**: Search for symbols
-- **Z**: Toggle display of hidden options
-- **ESC ESC**: Exit current menu/dialog
-- **Tab**: Navigate between buttons in dialogs
-
-### Configuration Files
-- Configuration is saved to `.config` by default
-- Use **Save** button to save to alternate file
-- Use **Load** button to load from alternate file
-
-## Testing
-
-A sample `test_Kconfig` file is provided for testing the functionality:
-
-```bash
-./mconf test_Kconfig
-```
-
-This will open a test configuration with various option types:
-- Boolean options
-- String input
-- Integer input with range validation
-- Hexadecimal input
-- Choice menus
-- Dependent options
-
-## Troubleshooting
-
-### Build Issues
-
-**"ncurses not found"**
-```bash
-# Make sure development headers are installed
-sudo apt-get install libncurses5-dev  # Ubuntu/Debian
-```
-
-**"MinGW compiler not found"**
-```bash
-# Install MinGW-w64
-sudo apt-get install mingw-w64  # Ubuntu/Debian
-```
-
-**Static linking fails**
-```bash
-# Some distributions need additional packages
-sudo apt-get install libc6-dev-i386  # For 32-bit support
-```
-
-### Runtime Issues
-
-**"Your display is too small"**
-- Minimum terminal size: 19 lines × 80 columns
-- Resize your terminal window
-
-**Colors look wrong**
-- Set TERM environment variable: `export TERM=xterm-256color`
-- Try different color themes with MENUCONFIG_COLOR
-
-**Segmentation fault**
-- Check that your Kconfig file syntax is correct
-- Try with the provided test_Kconfig first
+Check the github action script in the .github/workflow, which has the commands to build it one both Windows and Linux.
 
 ## Integration
 
