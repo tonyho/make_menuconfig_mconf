@@ -1,3 +1,7 @@
+# Need make xconfig(qconf) version?
+
+Get it from [this repository](https://github.com/tonyho/make_xconfig_mconf)
+
 # Git it for Windows/Linux
 
 Just download it from the release page, the Linux version is static linked, so no libncurse is required.
